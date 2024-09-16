@@ -1,4 +1,7 @@
 const postRepository = require("../repositories/post-repository");
+const mongoose = require("mongoose");
+const ClientError = require("../utils/errors/client-error");
+const httpStatusCode = require("../utils/httpStatusCode");
 
 // ALL the buisness logic will be here
 
@@ -37,6 +40,58 @@ class PostService {
         currentPage: page,
         numberOfPages: Math.ceil(total / LIMIT),
       };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async getPostById(id) {
+    try {
+      const post = await postRepository.getSinglePost(id);
+      return post;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async createPost(post) {
+    try {
+      const createdPost = await postRepository.createPost(post);
+      return createdPost;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updatePost(id, postData) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ClientError(
+          "ValidationError",
+          "Post is not found!",
+          "",
+          httpStatusCode.BAD_REQUEST
+        );
+      }
+      const updatedPost = await postRepository.updatePost(id, postData);
+      return updatedPost;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deletePost(id) {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ClientError(
+          "ValidationError",
+          "Post is not found!",
+          "",
+          httpStatusCode.BAD_REQUEST
+        );
+      }
+      await postRepository.deletePost(id);
+      return { status: "success", message: "Post Deleted successfully!" };
     } catch (error) {
       throw error;
     }
