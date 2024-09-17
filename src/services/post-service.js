@@ -1,5 +1,4 @@
 const postRepository = require("../repositories/post-repository");
-const mongoose = require("mongoose");
 const ClientError = require("../utils/errors/client-error");
 const httpStatusCode = require("../utils/httpStatusCode");
 
@@ -54,9 +53,9 @@ class PostService {
     }
   }
 
-  async createPost(post) {
+  async createPost(userId, post) {
     try {
-      const createdPost = await postRepository.createPost(post);
+      const createdPost = await postRepository.createPost(userId, post);
       return createdPost;
     } catch (error) {
       throw error;
@@ -65,7 +64,7 @@ class PostService {
 
   async updatePost(id, postData) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!postRepository.isValidMongoID(id)) {
         throw new ClientError(
           "ValidationError",
           "Post is not found!",
@@ -82,7 +81,7 @@ class PostService {
 
   async deletePost(id) {
     try {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!postRepository.isValidMongoID(id)) {
         throw new ClientError(
           "ValidationError",
           "Post is not found!",
@@ -92,6 +91,81 @@ class PostService {
       }
       await postRepository.deletePost(id);
       return { status: "success", message: "Post Deleted successfully!" };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async likePost(userId, postId) {
+    try {
+      if (!userId) {
+        //Unauthenticated
+        throw new ClientError(
+          "Unauthorized!",
+          "User is unauthorized!",
+          "",
+          httpStatusCode.NOT_FOUND
+        );
+      }
+      //Find post for the like
+      if (!postRepository.isValidMongoID(postId)) {
+        throw new ClientError(
+          "ValidationError",
+          "Post is not found!",
+          "",
+          httpStatusCode.BAD_REQUEST
+        );
+      }
+      const post = await postRepository.getSinglePost(postId);
+      //now we have to check the user id is in the like section or not (each user can only like once and second time when he clicked it's going to be dislike the post)
+      const likesIndex = post.likes.findIndex((id) => {
+        return id.toString() === userId;
+      });
+      if (likesIndex === -1) {
+        //If the id is not found in likesIndex so for that we add -1
+        //For liking the post (logic of like the post)
+        post.likes.push(userId);
+      } else {
+        //FOr dislike the post
+        post.likes = post.likes.filter((id) => {
+          return id.toString() !== userId;
+        });
+      }
+      const likingPost = await postRepository.updatePost(postId, post);
+      return likingPost;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async commentPost(userId, postId, comment) {
+    try {
+      if (!postRepository.isValidMongoID(postId)) {
+        throw new ClientError(
+          "ValidationError",
+          "Post is not found!",
+          "",
+          httpStatusCode.BAD_REQUEST
+        );
+      }
+
+      //First we find the post from data base
+      const post = await postRepository.getSinglePost(postId);
+      if (!post) {
+        throw new ClientError(
+          "ValidationError",
+          "Post is not found!",
+          "",
+          httpStatusCode.BAD_REQUEST
+        );
+      }
+
+      //push the commment inside comments array
+      post.comments.push({ userId, comment });
+
+      //then update the whole post
+      const updatedPost = await postRepository.updatePost(postId, post);
+      return updatedPost;
     } catch (error) {
       throw error;
     }

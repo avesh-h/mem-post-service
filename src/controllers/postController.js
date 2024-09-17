@@ -32,8 +32,9 @@ const getSinglePost = async (req, res) => {
 
 const createPost = async (req, res) => {
   const post = req.body;
+  const userId = req?.userId;
   try {
-    const newPost = await postService.createPost(post);
+    const newPost = await postService.createPost(userId, post);
     return res.status(httpStatusCode.CREATED).send(newPost);
   } catch (error) {
     return res.status(error.statusCode).json({
@@ -73,10 +74,44 @@ const deletePost = async (req, res) => {
   }
 };
 
+const likePost = async (req, res) => {
+  //To check promise for task pending...
+  // return new Promise((resolve, reject) => setTimeout(resolve("done"), 3000));
+  const { id: postId } = req.params;
+  try {
+    //Now we can access middleware varible which store the id of user that currently logged in
+    const post = await postService.likePost(req?.userId, postId);
+    return res.status(httpStatusCode.OK).json(post);
+  } catch (error) {
+    return res.status(error.statusCode).json({
+      message: error.message,
+      status: "failed",
+      error,
+    });
+  }
+};
+
+const commentPost = async (req, res) => {
+  const { id: postId } = req.params;
+  const { finalComment } = req.body;
+  const userId = req.userId;
+
+  //then update the whole post
+  const updatedPost = await postService.commentPost(
+    userId,
+    postId,
+    finalComment
+  );
+
+  return res.status(httpStatusCode.OK).json(updatedPost);
+};
+
 module.exports = {
   getPosts,
   getSinglePost,
   createPost,
   updatePost,
   deletePost,
+  likePost,
+  commentPost,
 };

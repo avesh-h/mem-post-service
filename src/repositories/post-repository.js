@@ -1,5 +1,6 @@
 const PostModel = require("../models/postModel");
 const ValidationError = require("../utils/errors/validation-error");
+const mongoose = require("mongoose");
 
 //DB related methods will all come here even the aggreagation or queries all will come her except business logic of those queries.
 
@@ -38,11 +39,11 @@ class PostRepository {
     }
   }
 
-  async createPost(post) {
+  async createPost(userId, post) {
     try {
       const newPost = new PostModel({
         ...post,
-        creator: post.userId,
+        creator: userId,
         createdAt: new Date().toISOString(),
       });
       await newPost.save();
@@ -55,9 +56,15 @@ class PostRepository {
     }
   }
 
+  async isValidMongoID(id) {
+    return mongoose.Types.ObjectId.isValid(id);
+  }
+
   async updatePost(id, postData) {
     try {
-      const updatedPost = await PostModel.findByIdAndUpdate(id, postData);
+      const updatedPost = await PostModel.findByIdAndUpdate(id, postData, {
+        new: true,
+      });
       return updatedPost;
     } catch (error) {
       throw error;

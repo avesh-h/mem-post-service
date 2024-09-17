@@ -8,11 +8,20 @@ const postSchema = mongoose.Schema({
   tags: [String],
   selectedFile: String,
   likes: {
-    type: [String],
+    type: [{ type: mongoose.Types.ObjectId, ref: "User" }],
     default: [],
   },
   comments: {
-    type: [String],
+    type: [
+      {
+        userId: {
+          type: mongoose.Types.ObjectId,
+          ref: "User",
+        },
+        comment: String,
+        _id: false,
+      },
+    ],
     default: [],
   },
   createdAt: {
