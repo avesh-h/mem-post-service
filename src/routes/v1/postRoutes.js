@@ -6,11 +6,16 @@ const {
   updatePost,
   deletePost,
 } = require("../../controllers/postController");
+const auth = require("../../middlewares/auth");
 
 const router = express.Router();
 
-router.route("/").get(getPosts).post(createPost);
+router.route("/").get(getPosts).post([auth, createPost]);
 
-router.route("/:id").get(getSinglePost).patch(updatePost).delete(deletePost);
+router
+  .route("/:id")
+  .get(getSinglePost)
+  .patch(auth, updatePost)
+  .delete(auth, deletePost);
 
 module.exports = router;

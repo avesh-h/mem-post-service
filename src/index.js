@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const { PORT } = require("./config/serverConfig");
 const connectionToDB = require("./config/dbConfig");
 const serverRoutes = require("./routes/index");
-const PostModel = require("./models/postModel");
+const globalErrorMiddleware = require("./middlewares/error-middleware");
 
 // Controller: Handles HTTP logic.
 // Service: Contains business rules and logic.
@@ -21,6 +21,9 @@ const setupAndStartServer = async () => {
   connectionToDB();
 
   app.use("/api", serverRoutes);
+
+  //Global error handling
+  app.use(globalErrorMiddleware);
 
   app.listen(PORT, async () => {
     console.log("Post Service is now on " + PORT);
