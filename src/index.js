@@ -6,6 +6,7 @@ const { PORT } = require("./config/serverConfig");
 const connectionToDB = require("./config/dbConfig");
 const serverRoutes = require("./routes/index");
 const globalErrorMiddleware = require("./middlewares/error-middleware");
+const { createChannel } = require("./utils/messageQueue");
 
 // Controller: Handles HTTP logic.
 // Service: Contains business rules and logic.
@@ -20,7 +21,12 @@ const setupAndStartServer = async () => {
   //Db connection
   connectionToDB();
 
-  app.use("/api", serverRoutes);
+  // Create MQ channel
+  const channel = await createChannel();
+
+  // The method we did here called DEPENDENCY INJECTION for use the same channel object in the all the routes and controllers of the repo.
+
+  app.use("/api", serverRoutes(channel));
 
   //Global error handling
   app.use(globalErrorMiddleware);
