@@ -67,14 +67,17 @@ class PostService {
           },
         }
       );
+      if (!userDetails?.data) {
+        throw new ServiceError(
+          "Service Error",
+          "There is something wrong in Auth service error",
+          "",
+          500
+        );
+      }
       return userDetails?.data;
     } catch (error) {
-      throw new ServiceError(
-        "Service Error",
-        "There is something wrong in Auth service error",
-        "",
-        500
-      );
+      throw error;
     }
   }
 
