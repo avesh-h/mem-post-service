@@ -91,7 +91,7 @@ const likePost = async (req, res, channel) => {
   }
 };
 
-const commentPost = async (req, res) => {
+const commentPost = async (req, res, channel) => {
   const { id: postId } = req.params;
   const { finalComment } = req.body;
   const userId = req.userId;
@@ -100,7 +100,8 @@ const commentPost = async (req, res) => {
   const updatedPost = await postService.commentPost(
     userId,
     postId,
-    finalComment
+    finalComment,
+    channel
   );
 
   return res.status(httpStatusCode.OK).json(updatedPost);

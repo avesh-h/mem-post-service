@@ -199,7 +199,7 @@ class PostService {
     }
   }
 
-  async commentPost(userId, postId, comment) {
+  async commentPost(userId, postId, comment, channel) {
     try {
       if (!postRepository.isValidMongoID(postId)) {
         throw new ClientError(
@@ -226,6 +226,26 @@ class PostService {
 
       //then update the whole post
       const updatedPost = await postRepository.updatePost(postId, post);
+
+      // Send mail when comment post
+      // First get user details of who comment the post
+      const userDetails = await this.getUserDetailsById(userId);
+      // Second get details of who create the post based on post Id
+      const postUser = await this.getUserDetailsById(post?.creator);
+      // Prepare email payload
+      const emailPayload = {
+        email: postUser?.data?.email, // Post creator email
+        subject: "Someone commented on your post recently!",
+        html: `<h4>${userDetails?.data?.name} is comment on your post recently! Read comment By click on the link now <a href="${FRONTEND_URL}/posts/${postId}">${postUser?.data?.name}</a><h4>`,
+      };
+
+      //Send mail to the user for the created the post
+      await publishMessage(
+        channel,
+        "post_service",
+        JSON.stringify(emailPayload)
+      );
+
       return updatedPost;
     } catch (error) {
       throw error;
