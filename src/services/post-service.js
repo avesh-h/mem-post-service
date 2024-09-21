@@ -3,7 +3,8 @@ const ClientError = require("../utils/errors/client-error");
 const httpStatusCode = require("../utils/httpStatusCode");
 const { publishMessage } = require("../utils/messageQueue");
 const axios = require("axios");
-const { AUTH_SERVICE } = require("../config/serverConfig");
+const { AUTH_SERVICE, FRONTEND_URL } = require("../config/serverConfig");
+const ServiceError = require("../utils/errors/service-error");
 
 // ALL the buisness logic will be here
 
@@ -56,10 +57,8 @@ class PostService {
     }
   }
 
-  async createPost(userId, post, channel) {
+  async getUserDetailsById(userId) {
     try {
-      const createdPost = await postRepository.createPost(userId, post);
-      // Get user details based on the creator of the post for sending mail service
       const userDetails = await axios.get(
         `${AUTH_SERVICE}/api/v1/user/get-user-details?user=${userId}`,
         {
@@ -68,10 +67,27 @@ class PostService {
           },
         }
       );
+      return userDetails?.data;
+    } catch (error) {
+      throw new ServiceError(
+        "Service Error",
+        "There is something wrong in Auth service error",
+        "",
+        500
+      );
+    }
+  }
+
+  async createPost(userId, post, channel) {
+    try {
+      const createdPost = await postRepository.createPost(userId, post);
+      // Get user details based on the creator of the post for sending mail service
+      const userDetails = await this.getUserDetailsById(userId);
+      // Prepare email payload
       const emailPayload = {
-        email: userDetails?.data?.data?.email,
-        name: userDetails?.data?.data?.name,
+        email: userDetails?.data?.email,
         subject: "Post Created Successfully",
+        html: `<h4>You've created post successfully please click on the link to view <a href="${FRONTEND_URL}/posts">${userDetails?.data?.name}</a><h4>`,
       };
       //Send mail to the user for the created the post
       await publishMessage(
@@ -120,7 +136,7 @@ class PostService {
     }
   }
 
-  async likePost(userId, postId) {
+  async likePost(userId, postId, channel) {
     try {
       if (!userId) {
         //Unauthenticated
@@ -149,6 +165,24 @@ class PostService {
         //If the id is not found in likesIndex so for that we add -1
         //For liking the post (logic of like the post)
         post.likes.push(userId);
+        // Send mail when like post
+        // First get user details of who like the post
+        const userDetails = await this.getUserDetailsById(userId);
+        // Second get details of who create the post based on post Id
+        const postUser = await this.getUserDetailsById(post?.creator);
+        // Prepare email payload
+        const emailPayload = {
+          email: postUser?.data?.email, // Post creator email
+          subject: "Someone like your post recently!",
+          html: `<h4>${userDetails?.data?.name} is like your post recently! find out others who like your post by click on the link <a href="${FRONTEND_URL}/posts">${postUser?.data?.name}</a><h4>`,
+        };
+
+        //Send mail to the user for the created the post
+        await publishMessage(
+          channel,
+          "post_service",
+          JSON.stringify(emailPayload)
+        );
       } else {
         //FOr dislike the post
         post.likes = post.likes.filter((id) => {

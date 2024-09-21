@@ -74,13 +74,13 @@ const deletePost = async (req, res) => {
   }
 };
 
-const likePost = async (req, res) => {
+const likePost = async (req, res, channel) => {
   //To check promise for task pending...
   // return new Promise((resolve, reject) => setTimeout(resolve("done"), 3000));
   const { id: postId } = req.params;
   try {
     //Now we can access middleware varible which store the id of user that currently logged in
-    const post = await postService.likePost(req?.userId, postId);
+    const post = await postService.likePost(req?.userId, postId, channel);
     return res.status(httpStatusCode.OK).json(post);
   } catch (error) {
     return res.status(error.statusCode).json({

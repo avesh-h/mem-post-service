@@ -8,4 +8,5 @@ module.exports = {
   BINDING_KEY: process.env.BINDING_KEY,
   MESSAGE_BROKER_URL: process.env.MESSAGE_BROKER_URL,
   AUTH_SERVICE: process.env.AUTH_SERVICE,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 };
