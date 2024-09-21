@@ -26,6 +26,10 @@ const setupAndStartServer = async () => {
 
   // The method we did here called DEPENDENCY INJECTION for use the same channel object in the all the routes and controllers of the repo.
 
+  //Global express store for the store values(like context)
+
+  // app.locals.channel = channel;
+
   app.use("/api", serverRoutes(channel));
 
   //Global error handling

@@ -7,4 +7,5 @@ module.exports = {
   EXCHANGE_NAME: process.env.EXCHANGE_NAME,
   BINDING_KEY: process.env.BINDING_KEY,
   MESSAGE_BROKER_URL: process.env.MESSAGE_BROKER_URL,
+  AUTH_SERVICE: process.env.AUTH_SERVICE,
 };

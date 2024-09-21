@@ -30,11 +30,11 @@ const getSinglePost = async (req, res) => {
   }
 };
 
-const createPost = async (req, res) => {
+const createPost = async (req, res, channel) => {
   const post = req.body;
   const userId = req?.userId;
   try {
-    const newPost = await postService.createPost(userId, post);
+    const newPost = await postService.createPost(userId, post, channel);
     return res.status(httpStatusCode.CREATED).send(newPost);
   } catch (error) {
     return res.status(error.statusCode).json({

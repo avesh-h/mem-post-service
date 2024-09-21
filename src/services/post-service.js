@@ -1,6 +1,9 @@
 const postRepository = require("../repositories/post-repository");
 const ClientError = require("../utils/errors/client-error");
 const httpStatusCode = require("../utils/httpStatusCode");
+const { publishMessage } = require("../utils/messageQueue");
+const axios = require("axios");
+const { AUTH_SERVICE } = require("../config/serverConfig");
 
 // ALL the buisness logic will be here
 
@@ -53,11 +56,32 @@ class PostService {
     }
   }
 
-  async createPost(userId, post) {
+  async createPost(userId, post, channel) {
     try {
       const createdPost = await postRepository.createPost(userId, post);
+      // Get user details based on the creator of the post for sending mail service
+      const userDetails = await axios.get(
+        `${AUTH_SERVICE}/api/v1/user/get-user-details?user=${userId}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const emailPayload = {
+        email: userDetails?.data?.data?.email,
+        name: userDetails?.data?.data?.name,
+        subject: "Post Created Successfully",
+      };
+      //Send mail to the user for the created the post
+      await publishMessage(
+        channel,
+        "post_service",
+        JSON.stringify(emailPayload)
+      );
       return createdPost;
     } catch (error) {
+      // Need to handle error if we got in publishMessage
       throw error;
     }
   }

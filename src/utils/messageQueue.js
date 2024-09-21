@@ -1,12 +1,17 @@
 const amqp = require("amqplib");
 const { MESSAGE_BROKER_URL, EXCHANGE_NAME } = require("../config/serverConfig");
 
-let QUEUE_NAME = "post_service";
+let QUEUE_NAME = "mail_queue";
+
+// So how things works in the rabbit mq is that when we create the channel it will make connection between our service with the rabbitMQ server.
+
+//         Post Service channel -------------->  RABBIT MQ SERVER <------------------- Mail Service channel
 
 const createChannel = async () => {
   try {
     const conn = await amqp.connect(MESSAGE_BROKER_URL);
-    const channel = await conn.createChannel();
+    const channel = await conn.createChannel(); //Connection with MQ server
+
     // So after the setup this broker can exchange the messages between the multiple queues so the message broker have the message and see which queue it needs to send the message (it is optional to setup exchange)
     // Setup for routing system for the messages
     await channel.assertExchange(EXCHANGE_NAME, "direct", false);
@@ -49,26 +54,3 @@ const publishMessage = async (channel, binding_key, msg) => {
 };
 
 module.exports = { createChannel, subscribeMessage, publishMessage };
-
-// EXAMPLE
-
-// (async () => {
-//   const queue = "post_service";
-//   const conn = await amqp.connect("amqp://localhost");
-
-//   //First we create channel so i can connect with other services
-//   const postChannel = await conn.createChannel();
-
-//   //Assert queue will not create queue everytime it will see if the queue is exist then work with that if not then it will create the new queue.
-//   await postChannel.assertQueue(queue);
-
-//   //Listener
-//   postChannel.consume(queue, (msg) => {
-//     if (msg !== null) {
-//       // if we recieve the message in the queue then we can send acknowledgement for othe service
-//       postChannel.ack();
-//     } else {
-//       console.log("::::::::errror for reciever");
-//     }
-//   });
-// })();
