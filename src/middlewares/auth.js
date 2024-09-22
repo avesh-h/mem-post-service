@@ -38,7 +38,12 @@ const auth = async (req, res, next) => {
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      throw new ServiceError("Token has expired", 401); // 401 Unauthorized for expired token
+      throw new ServiceError(
+        "UnauthorizedError",
+        "Token has expired",
+        "The token used for authentication has expired.",
+        httpStatusCode.UNAUTHORIZED
+      ); // 401 Unauthorized for expired token
     }
     next(error);
   }

@@ -3,7 +3,7 @@ const ClientError = require("../utils/errors/client-error");
 const httpStatusCode = require("../utils/httpStatusCode");
 const { publishMessage } = require("../utils/messageQueue");
 const axios = require("axios");
-const { AUTH_SERVICE, FRONTEND_URL } = require("../config/serverConfig");
+const { FRONTEND_URL, AUTH_SERVICE_URL } = require("../config/serverConfig");
 const ServiceError = require("../utils/errors/service-error");
 
 // ALL the buisness logic will be here
@@ -60,7 +60,7 @@ class PostService {
   async getUserDetailsById(userId) {
     try {
       const userDetails = await axios.get(
-        `${AUTH_SERVICE}/api/v1/user/get-user-details?user=${userId}`,
+        `${AUTH_SERVICE_URL}/api/v1/user/get-user-details?user=${userId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -195,7 +195,12 @@ class PostService {
       const likingPost = await postRepository.updatePost(postId, post);
       return likingPost;
     } catch (error) {
-      throw error;
+      throw new ServiceError(
+        error.name,
+        error.message,
+        error.explanation,
+        error.statusCode
+      );
     }
   }
 
