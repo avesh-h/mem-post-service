@@ -33,7 +33,10 @@ const subscribeMessage = async (channel, binding_key, service) => {
     //Consume
     channel.consume(applicationQueue.queue, (msg) => {
       console.log("msggggg", msg?.content?.toString());
-      channel.ack("Message received!!");
+      // We can send specific message to services to send back to user or can call the controller according to message.
+
+      //Acknowledgement
+      channel.ack(msg);
     });
   } catch (error) {
     console.log("SUBSCRIBE_MESSAGE:::::::", error);
