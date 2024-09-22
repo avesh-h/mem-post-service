@@ -10,14 +10,26 @@ let QUEUE_NAME = "mail_queue";
 const createChannel = async () => {
   try {
     const conn = await amqp.connect(MESSAGE_BROKER_URL);
-    const channel = await conn.createChannel(); //Connection with MQ server
-
+    const channel = await conn.createChannel();
     // So after the setup this broker can exchange the messages between the multiple queues so the message broker have the message and see which queue it needs to send the message (it is optional to setup exchange)
     // Setup for routing system for the messages
-    await channel.assertExchange(EXCHANGE_NAME, "direct", false);
+    await channel.assertExchange(EXCHANGE_NAME);
+
+    // Handle connection errors
+    conn.on("error", (err) => {
+      console.error("Connection error:", err);
+    });
+
+    // Handle unexpected connection closures and reconnect
+    conn.on("close", () => {
+      console.warn("Connection to RabbitMQ closed, reconnecting...");
+      setTimeout(createChannel, 1000); // Attempt to reconnect after 1 second
+    });
+
     return channel;
   } catch (error) {
-    return error;
+    console.error("Error in creating channel:", error);
+    setTimeout(createChannel, 1000); // Reattempt after 1 second on failure
   }
 };
 

@@ -18,11 +18,11 @@ const setupAndStartServer = async () => {
   app.use(bodyParser.json({ limit: "30mb", extended: true }));
   app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 
-  //Db connection
-  connectionToDB();
-
   // Create MQ channel
   const channel = await createChannel();
+
+  //Db connection
+  connectionToDB(channel);
 
   // The method we did here called DEPENDENCY INJECTION for use the same channel object in the all the routes and controllers of the repo.
 

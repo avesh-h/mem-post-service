@@ -2,10 +2,14 @@ const mongoose = require("mongoose");
 const { DB_URI } = require("./serverConfig");
 
 let isConnected = false;
+let mqChannel = null;
 
-const connectionToDB = async () => {
+const connectionToDB = async (channel) => {
   if (!DB_URI) return console.log("Invalid DB config");
   if (isConnected) return console.log("DB is already connected!");
+  if (!mqChannel) {
+    mqChannel = channel;
+  }
   try {
     const db = mongoose.connection;
     db.on("open", () => {
@@ -24,6 +28,9 @@ const connectionToDB = async () => {
 process.on("SIGINT", () => {
   mongoose.connection.close(() => {
     console.log("mongoose close");
+    if (mqChannel) {
+      mqChannel.close();
+    }
     process.exit(0);
   });
 });
