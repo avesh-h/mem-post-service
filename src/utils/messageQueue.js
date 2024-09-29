@@ -26,6 +26,9 @@ const createChannel = async () => {
       setTimeout(createChannel, 1000); // Attempt to reconnect after 1 second
     });
 
+    // Log successful connection
+    console.log("Successfully connected to RabbitMQ!");
+
     return channel;
   } catch (error) {
     console.error("Error in creating channel:", error);
